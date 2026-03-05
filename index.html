@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Twitch Shout-out Clips Player</title>
+    <meta name="description"
+        content="Twitch Shout out clip player. !so channelname. This will display a random clip and say a shout out message in chat." />
+    <meta name="keywords" content="Twitch, shoutout, chat bot, overlay" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Twitch Shout-out Clips Player" />
+    <meta property="og:description"
+        content="Twitch Shout out clip player. !so channelname. This will display a random clip and say a shout out message in chat." />
+    <meta property="og:url" content="" />
+    <meta property="og:site_name" content="Twitch Shout-out Clips Player" />
+    <script src="assets/js/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="assets/css/bootstrap452.min.css">
+    <link rel="stylesheet" href="assets/css/dark.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="57x57" href="assets/images/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="assets/images/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="assets/images/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/images/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="assets/images/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/images/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/images/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/images/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/images/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+</head>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Noto Sans, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        background-color: #181821;
+        color: #ddd9e8 !important;
+    }
+
+    .card,
+    .alert {
+        background-color: #292938 !important;
+        border-color: #292938 !important;
+        color: #ddd9e8 !important;
+    }
+
+    .hide {
+        display: none;
+    }
+
+    .ml-0 {
+        margin-left: 0 !important;
+    }
+
+    .ml-4 {
+        margin-left: 1.5rem !important;
+    }
+
+    .pl-0 {
+        padding-left: 0 !important;
+    }
+
+    .pr-0 {
+        padding-right: 0 !important;
+    }
+
+    .dark-blue {
+        background-color: #1b2836 !important;
+        color: #fff !important;
+    }
+
+    .light-blue {
+        background-color: #354e69 !important;
+        color: #fff !important;
+    }
+
+    .btn-purple, .btn-purple:hover, .btn-purple:focus, .btn-purple:active {
+        background-color: #6441a5;
+        border-color: #523c7c;
+    }
+</style>
+
+<body onload="onInit()">
+    <div class="container">
+        <div class="row pt-md-4 mb-4">
+            <ul class="nav nav-pills">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" data-toggle="dropdown" href="#" role="button"
+                        aria-haspopup="true" aria-expanded="false"><!--Twitch Tools--></a>
+                    <div class="dropdown-menu" id="main-nav">
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body shadow">
+                <h2>Shout-Out Clip Player Overlay</h2>
+                <p>Play a random clip from the streamers channel that is shouted out.</p>
+                <h3>Features:</h3>
+                <ul>
+                    <li><strong>Multiple Shoutouts</strong> Shoutout's go into a queue. When one shoutout finishes
+                        playing, it will play the next shoutout.</li>
+                    <li><strong>!watchclip</strong> Play a clip that was posted into chat.</li>
+                    <li><strong>!replayso, !soreplay, !clipreplay, !replayclip</strong> will replay the previous
+                        shout-out clip. Maybe you just have to see that clip again :)</li>
+                    <li><strong>!stopclip</strong> to stop/reload the browser source in case a clip is just way too
+                        long, cringey or playing at an inappropriate time. Limited to Mods and Streamer. Can also use
+                        (!sostop, !stopclip, !clipstop, !clipreload)</li>
+                    <li><strong>Date Range option:</strong> This will try to grab a clip from within the last 5days,
+                        10day,
+                        30days... If no clips exist, then it will play a random "popular" clip.</li>
+                    <li><strong>Prefer Featured Clips:</strong> This will try to grab featured clips. If no clips exist,
+                        then it will play a random "popular" clip.</li>
+                    <li>
+                        <strong>Show clip details panel:</strong> This will display a panel in the lower third of the
+                        overlay that contains details about the clip. This can use
+                        variables:{channel},{title},{game},{creator_name},{created_at}.
+                    </li>
+                    <li><strong>Raid shoutout:</strong> Automatically do a shout-out on Raid events.</li>
+                </ul>
+                <p>Be sure to set "Shutdown source when not visible", "Control audio via OBS", "Refresh browser when
+                    scene becomes active" on the OBS Browser Source properties.</p>
+                <p><!--Join our GitHub Discussions to get the latest on new features and updates, submit feature requests, report issues, and talk tech with the community.--></p>
+                <!--<div class="text-center p-2">
+                    <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout/blob/main/README.md" target="_blank" title="README"><i class="fa-brands fa-readme"></i></a>
+                    <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout/discussions" target="_blank" title="GitHub Discussions"><i class="fa-solid fa-comment"></i></a>
+                    <a class="btn btn-link btn-lg" href="https://github.com/sponsors/teklynk" target="_blank" title="Donate/Support"><i class="fa-solid fa-dollar-sign"></i></a>
+                </div>-->
+            </div>
+        </div>
+
+        <div class="alert alert-dark shadow" role="alert"><p>Access Token is required if you would like to post a shoutout message in chat.</p>
+            <div class="form-label-group">
+                <div>
+                    <a class="btn btn-purple btn-lg text-white shadow-sm font-weight-bold" id="twitch-auth-link" href="#" target="_self" title="Sign in with your Twitch account"><i class="fa-brands fa-twitch"></i>&nbsp;Connect</a>
+                </div>
+                <div class="form-label-group mt-2">
+                    <label for="ref">Access token</label>
+                    <input type="password" id="ref" class="form-control">
+                    <span id="show_ref"
+                        style="cursor:pointer;text-align:left;display:inline-block;width:70px;margin-top: 4px;font-size:smaller;vertical-align:top;"
+                        title="Show/Hide">show
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-label-group mb-4">
+            <label for="mainAccount">Twitch Account</label>
+            <input type="text" id="mainAccount" class="form-control validate shadow" placeholder="MrCoolStreamer">
+        </div>
+
+        <div class="form-label-group mb-4">
+            <label for="command">Custom Command (so, soclip, playclip. No need to include the ! symbol)</label>
+            <input type="text" id="command" class="form-control validate shadow" value="so" placeholder="so" size="50">
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="showClip" checked>
+            <label class="form-check-label" for="showClip">
+                Show clip
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="preferFeatured">
+            <label class="form-check-label" for="preferFeatured">
+                Prefer featured clips (Featured clips if found)
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="showImage">
+            <label class="form-check-label" for="showImage">
+                Show the user profile image if clips do not exist
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="raided">
+            <label class="form-check-label" for="raided">
+                Automatically shoutout a streamer when they raid you.
+            </label>
+        </div>
+        <div class="form-group range-slider hide ml-4 mr-4 mt-2" id="so_count">
+            <label for="delay">Min raid party size</label>
+            <input type="range" max="30" min="0" step="1" class="form-control range-slider-range shadow" id="raidCount"
+                value="3" style="height: 0;">
+            <small class="text-muted range-slider-value"></small>
+            <small class="text-muted range-slider-value">Users</small>
+        </div>
+        <div class="form-group range-slider hide ml-4 mr-4" id="so_delay">
+            <label for="delay">Delay automatic shoutout</label>
+            <input type="range" max="30" min="1" step="1" class="form-control range-slider-range shadow" id="delay"
+                value="10" style="height: 0;">
+            <small class="text-muted range-slider-value"></small>
+            <small class="text-muted range-slider-value">Seconds</small>
+        </div>
+        <div class="form-group range-slider mt-2">
+            <label for="dateRange">Prefer clips from within a Date Range (Date range clips if found) <small class="text-warning">* 0 Day(s) = OFF</small>
+            </label>
+            <input type="range" max="365" min="0" step="10" class="form-control range-slider-range shadow" id="dateRange"
+                value="0" style="height: 0;">
+            <small class="text-muted range-slider-value" id="date-limit"></small>
+            <small class="text-muted range-slider-value">Day(s)</small>
+        </div>
+        <div class="form-group range-slider">
+            <label for="timeOut">Max Duration Time (How long should the clip play?)</label>
+            <input type="range" max="60" min="10" step="10" class="form-control range-slider-range shadow" id="timeOut"
+                value="60" style="height: 0;">
+            <small class="text-muted range-slider-value"></small>
+            <small class="text-muted range-slider-value">Seconds</small>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="showText" checked>
+            <label class="form-check-label" for="showText">
+                Show: "Go check out {channel}" on top of the clip
+            </label>
+            <div class="form-label-group mb-4 hide" id="customTitle_block">
+                <div class="form-label-group mb-4 mt-2">
+                    <label for="customTitle">Custom Title (Optional)</label>
+                    <input type="text" id="customTitle" class="form-control shadow" value=""
+                        placeholder="Go check out {channel} {url}" size="50">
+                </div>
+            </div>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input shadow" type="checkbox" value="" id="showDetails">
+            <label class="form-check-label" for="showDetails">
+                Show clip details panel
+            </label>
+        </div>
+        <div class="form-label-group mt-2 mb-4 ml-4 hide" id="showDetailsText">
+            <label for="detailsText">Custom clip details panel text (Optional)
+            </label>
+            <textarea class="form-control shadow" id="detailsText" rows="4" placeholder="{title}
+While streaming {game}
+Clipped by {creator_name} {created_at}"></textarea>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input shadow" type="checkbox" value="" id="showMsg">
+            <label class="form-check-label" for="showMsg">
+                Show chat message: "Go check out {channel}! - They were playing: {game} - {title} - {url}"
+                <small class="text-warning">* Requires Twitch Access Token</small>
+            </label>
+            <div class="form-label-group mb-4 hide" id="access_token">
+                <div class="form-label-group mb-4 mt-2">
+                    <label for="customMsg">Custom Message (Optional)</label>
+                    <input type="text" id="customMsg" class="form-control shadow" value=""
+                        placeholder="Go check out {channel}! - They were playing: {game} - {title} - {url}" size="50">
+                </div>
+            </div>
+        </div>
+        <div class="form-check mb-2 mt-2">
+            <input class="form-check-input shadow" type="checkbox" value="" id="modsOnly" checked>
+            <label class="form-check-label" for="modsOnly">
+                Mods &amp; VIPs only
+            </label>
+        </div>
+        <div class="form-group mt-4">
+            <label for="themeOption">Theme options</label>
+            <select class="form-control shadow" id="themeOption">
+                <option value="0">None</option>
+                <option value="1">Slide in fancy skewed</option>
+                <option value="2" selected>Slide in basic</option>
+                <option value="3">Outside the box</option>
+            </select>
+        </div>
+        <br>
+        <button class="btn btn-lg btn-success btn-block text-white shadow" id="generate_button" type="button">Generate
+            Overlay
+            Link</button>
+        <br>
+        <div id="overlaylink" class="hide"></div>
+    </div>
+    <div class="text-center p-2">
+        <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout/blob/main/README.md" target="_blank" title="README"><i class="fa-brands fa-readme"></i></a>
+        <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+        <a class="btn btn-link btn-lg" href="https://github.com/teklynk/twitch_shoutout/discussions" target="_blank" title="GitHub Discussions"><i class="fa-solid fa-comment"></i></a>
+        <a class="btn btn-link btn-lg" href="https://github.com/sponsors/teklynk" target="_blank" title="Donate/Support"><i class="fa-solid fa-dollar-sign"></i></a>
+    </div>
+    <div class="container text-center p-4">
+        <small class="muted">Made with <i class="fa fa-heart vertical-middle text-danger"></i> by <a href="https://www.teklynk.com" target="_blank">Teklynk</a></small>
+    </div>
+    <script>
+        const TWITCH_CLIENT_ID = "gl1cjo1kdgsmj7lwjajhnb2lireyus";
+
+        function onInit() {
+
+            let url = window.location.href;
+            let redirectUrl = window.location.origin + window.location.pathname;
+            redirectUrl = redirectUrl.replace(/\/$/, "");
+
+            // Update auth link
+            let authLink = document.getElementById("twitch-auth-link");
+            let scope = "chat:read+chat:edit";
+            authLink.href = "https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=" + TWITCH_CLIENT_ID + "&redirect_uri=" + redirectUrl + "&scope=" + scope + "&force_verify=true";
+
+            if (url.indexOf('#access_token') !== -1) {
+                // extract the access_token from the url
+                let access_token = new URL(url).hash.split('&').filter(function (el) {
+                    if (el.match('access_token') !== null) return true;
+                })[0].split('=')[1];
+                // fill input with token value
+                document.getElementById("ref").value = access_token;
+                // Save token to localstorage
+                localStorage.setItem("TwitchSORef", access_token);
+                // Redirect to default page after getting token
+                window.location.href = redirectUrl;
+            } else {
+                document.getElementById("ref").value = localStorage.getItem("TwitchSORef");
+            }
+
+            let rangeSlider = function rangeSlider() {
+                let slider = $('.range-slider'),
+                    range = $('.range-slider-range'),
+                    value = $('.range-slider-value');
+
+                slider.each(function () {
+
+                    value.each(function () {
+                        let value = $(this).prev().attr('value');
+                        $(this).html(value);
+                    });
+
+                    range.on('input', function () {
+                        $(this).next(value).html(this.value);
+                    });
+                });
+            };
+
+            rangeSlider();
+
+            document.getElementById("mainAccount").value = localStorage.getItem("TwitchSOMainAccount");
+            document.getElementById("customMsg").value = localStorage.getItem("TwitchSOCustomMsg");
+            document.getElementById("customTitle").value = localStorage.getItem("TwitchSOCustomTitle");
+            document.getElementById("ref").value = localStorage.getItem("TwitchSORef");
+
+            if (localStorage.getItem("TwitchSOCommand")) {
+                document.getElementById("command").value = localStorage.getItem("TwitchSOCommand");
+            }
+            if (localStorage.getItem("TwitchSOThemeOption")) {
+                document.getElementById("themeOption").value = localStorage.getItem("TwitchSOThemeOption");
+            }
+            if (localStorage.getItem("TwitchSORaidCount")) {
+                document.getElementById("raidCount").value = localStorage.getItem("TwitchSORaidCount");
+                $('#raidCount').trigger('input');
+            }
+            if (localStorage.getItem("TwitchSODelay")) {
+                document.getElementById("delay").value = localStorage.getItem("TwitchSODelay");
+                $('#delay').trigger('input');
+            }
+            if (localStorage.getItem("TwitchSODateRange")) {
+                document.getElementById("dateRange").value = localStorage.getItem("TwitchSODateRange");
+                $('#dateRange').trigger('input');
+            }
+            if (localStorage.getItem("TwitchSOTimeOut")) {
+                document.getElementById("timeOut").value = localStorage.getItem("TwitchSOTimeOut");
+                $('#timeOut').trigger('input');
+            }
+            if (localStorage.getItem("TwitchSOShowClip")) {
+                document.getElementById("showClip").checked = (localStorage.getItem("TwitchSOShowClip") === "true");
+            }
+            if (localStorage.getItem("TwitchSOPreferFeatured")) {
+                document.getElementById("preferFeatured").checked = (localStorage.getItem("TwitchSOPreferFeatured") === "true");
+            }
+            if (localStorage.getItem("TwitchSOShowImage")) {
+                document.getElementById("showImage").checked = (localStorage.getItem("TwitchSOShowImage") === "true");
+            }
+            if (localStorage.getItem("TwitchSORaided")) {
+                document.getElementById("raided").checked = (localStorage.getItem("TwitchSORaided") === "true");
+            }
+            if (localStorage.getItem("TwitchSOShowText")) {
+                document.getElementById("showText").checked = (localStorage.getItem("TwitchSOShowText") === "true");
+            }
+            if (localStorage.getItem("TwitchSOShowDetails")) {
+                document.getElementById("showDetails").checked = (localStorage.getItem("TwitchSOShowDetails") === "true");
+            }
+            if (localStorage.getItem("TwitchSOShowMsg")) {
+                document.getElementById("showMsg").checked = (localStorage.getItem("TwitchSOShowMsg") === "true");
+            }
+            if (localStorage.getItem("TwitchSOModsOnly")) {
+                document.getElementById("modsOnly").checked = (localStorage.getItem("TwitchSOModsOnly") === "true");
+            }
+            if (localStorage.getItem("TwitchSODetailsText")) {
+                document.getElementById("detailsText").value = localStorage.getItem("TwitchSODetailsText");
+            }
+
+            if (document.getElementById("showText").checked) {
+                document.getElementById("customTitle_block").classList.toggle('hide');
+            }
+
+            // show custom details input
+            if (document.getElementById("showDetails").checked) {
+                document.getElementById("showDetailsText").classList.toggle('hide');
+            }
+
+            if (document.getElementById("showMsg").checked) {
+                document.getElementById("access_token").classList.toggle('hide');
+            }
+
+            if (document.getElementById("raided").checked) {
+                document.getElementById("so_delay").classList.toggle('hide');
+                document.getElementById("so_count").classList.toggle('hide');
+            }
+        }
+
+        // Check if any input fields have changed
+        $(":text,:password,textarea,:checkbox,input[type=range],select").on('change', function (e) {
+
+            $("#overlaylink").addClass("hide");
+
+            // Save the state of changes to localstorage so that they are not lost
+            localStorage.setItem("TwitchSOMainAccount", document.getElementById("mainAccount").value.trim());
+            localStorage.setItem("TwitchSORef", document.getElementById("ref").value.trim());
+            localStorage.setItem("TwitchSOCustomMsg", document.getElementById("customMsg").value.trim());
+            localStorage.setItem("TwitchSOCustomTitle", document.getElementById("customTitle").value.trim());
+            localStorage.setItem("TwitchSOCommand", document.getElementById("command").value.trim());
+            localStorage.setItem("TwitchSOThemeOption", document.getElementById("themeOption").value);
+            localStorage.setItem("TwitchSOShowClip", document.getElementById("showClip").checked);
+            localStorage.setItem("TwitchSOPreferFeatured", document.getElementById("preferFeatured").checked);
+            localStorage.setItem("TwitchSOShowImage", document.getElementById("showImage").checked);
+            localStorage.setItem("TwitchSORaided", document.getElementById("raided").checked);
+            localStorage.setItem("TwitchSOShowText", document.getElementById("showText").checked);
+            localStorage.setItem("TwitchSOShowDetails", document.getElementById("showDetails").checked);
+            localStorage.setItem("TwitchSOShowMsg", document.getElementById("showMsg").checked);
+            localStorage.setItem("TwitchSOModsOnly", document.getElementById("modsOnly").checked);
+            localStorage.setItem("TwitchSORaidCount", document.getElementById("raidCount").value);
+            localStorage.setItem("TwitchSODelay", document.getElementById("delay").value);
+            localStorage.setItem("TwitchSODateRange", document.getElementById("dateRange").value);
+            localStorage.setItem("TwitchSOTimeOut", document.getElementById("timeOut").value);
+            localStorage.setItem("TwitchSODetailsText", document.getElementById("detailsText").value);
+        });
+
+        //show chat message
+        document.getElementById("showMsg").addEventListener("click", function (e) {
+            document.getElementById("access_token").classList.toggle('hide');
+        }, false);
+
+        document.getElementById("showText").addEventListener("click", function (e) {
+            document.getElementById("customTitle_block").classList.toggle('hide');
+        }, false);
+
+        document.getElementById("showDetails").addEventListener("click", function (e) {
+            document.getElementById("showDetailsText").classList.toggle('hide');
+        }, false);
+
+        document.getElementById("raided").addEventListener("click", function (e) {
+            document.getElementById("so_delay").classList.toggle('hide');
+            document.getElementById("so_count").classList.toggle('hide');
+        }, false);
+
+        document.getElementById("showClip").addEventListener("click", function (e) {
+            document.getElementById("dateRange").disabled = false;
+        }, false);
+
+        document.getElementById("show_ref").addEventListener("click", function (e) {
+            if (document.getElementById("show_ref").innerText === "hide") {
+                document.getElementById("show_ref").innerText = "show";
+                document.getElementById("ref").setAttribute('type', 'password');
+            } else {
+                document.getElementById("show_ref").innerText = "hide";
+                document.getElementById("ref").setAttribute('type', 'text');
+            }
+        }, false);
+
+        document.getElementById("generate_button").addEventListener("click", function (e) {
+            let mainAccount = document.getElementById("mainAccount").value.trim();
+            let ref = document.getElementById("ref").value.trim();
+            let customMsg = document.getElementById("customMsg").value.trim();
+            let customTitle = document.getElementById("customTitle").value.trim();
+            let showClip = document.getElementById("showClip").checked;
+            let modsOnly = document.getElementById("modsOnly").checked;
+            let showMsg = document.getElementById("showMsg").checked;
+            let showImage = document.getElementById("showImage").checked;
+            let showText = document.getElementById("showText").checked;
+            let showDetails = document.getElementById("showDetails").checked;
+            let detailsText = document.getElementById("detailsText").value.trim();
+            let timeOut = document.getElementById("timeOut").value.trim();
+            let command = document.getElementById("command").value.trim();
+            let dateRange = document.getElementById("dateRange").value.trim();
+            let raided = document.getElementById("raided").checked;
+            let raidCount = document.getElementById("raidCount").value.trim();
+            let delay = document.getElementById("delay").value.trim();
+            let themeOption = document.getElementById("themeOption").value;
+            let preferFeatured = document.getElementById("preferFeatured").checked;
+            let validationError = false;
+
+            if (!mainAccount) {
+                alert('Twitch username is not set');
+            }
+
+            if (!command) {
+                alert('Shout-out command is not set!');
+            }
+
+            if (!showMsg) {
+                ref = '';
+            }
+
+            if (showMsg && !ref) {
+                alert('Twitch access token is required if show chat message is checked!');
+            }
+
+            if (showDetails && !detailsText) {
+                detailsText = "{title}\nWhile streaming {game}\nClipped by {creator_name} {created_at}";
+            }
+
+            function validateForm() {
+                const mainChannelInput = document.getElementById('mainAccount');
+                const mainChannelValue = mainChannelInput.value;
+                const inputKeywords = ['http', 'https', 'twitch.tv'];
+
+                inputKeywords.forEach(keyword => {
+                    if (mainChannelValue.includes(keyword)) {
+                        alert(`Invalid input: Channel name cannot contain "${keyword}".`);
+                        validationError = true;
+                        return false;
+                    }
+                });
+
+                return true;
+            }
+
+            validateForm();
+
+            //build overlay url
+            if (mainAccount && validationError == false) {
+                let srcURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                let fullUrl = srcURL + "shoutout.html?channel=" + mainAccount.toLowerCase() + "&showClip=" + showClip + "&showMsg=" + encodeURIComponent(showMsg) + "&showText=" + showText + "&showImage=" + showImage + "&raided=" + raided + "&raidCount=" + raidCount + "&delay=" + delay + "&modsOnly=" + modsOnly + "&timeOut=" + timeOut + "&command=" + command + "&customMsg=" + encodeURIComponent(customMsg) + "&customTitle=" + encodeURIComponent(customTitle) + "&showDetails=" + showDetails + "&detailsText=" + encodeURIComponent(detailsText) + "&dateRange=" + dateRange + "&themeOption=" + themeOption + "&preferFeatured=" + preferFeatured + "&ref=" + btoa(ref);
+                fullUrl = fullUrl.replace("index.htmlshoutout.html", "shoutout.html");
+                document.getElementById("overlaylink").classList.remove("hide");
+                document.getElementById("overlaylink").innerHTML = "<p>Add this link as a browser source in OBS.<br>" +
+                    "<a style='word-break:break-all;' href='" + fullUrl + "' target='_blank'>" + fullUrl + "</a><br><span class='text-warning'><small>* Never share this url with anyone or show it on stream!</small></span></p>";
+            }
+        });
+
+        // Json data - Ajax call
+        fetch("https://twitchapi.teklynk.com/getnav.php")
+            .then(response => response.json())
+            .then(nav_json => {
+                $.each(nav_json, function (i, val) {
+                    $('<a class="dropdown-item" href="' + val.url + '">' + val.name + '</a>').appendTo('#main-nav');
+                });
+            })
+            .catch(error => console.error('Error loading navigation:', error));
+    </script>
+</body>
+
+</html>
